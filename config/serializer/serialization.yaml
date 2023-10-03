@@ -1,0 +1,17 @@
+App\Entity\Product:
+  attributes:
+    description:
+      serialized_name: '@description'
+      groups: ['xml']
+    properties:
+      serialized_name: 'property'
+      groups: ['xml']
+
+App\Entity\Property:
+  attributes:
+    name:
+      serialized_name: '@name'
+      groups: ['xml']
+    value:
+      serialized_name: '#'
+      groups: ['xml']

@@ -4,13 +4,17 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Command\DemoCommand;
 use App\Dto\RegisterFormDto;
+use App\Entity\Product;
 use App\Form\Type\RegisterForm;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Serializer\SerializerInterface;
 
 /**
  * @see AppControllerTest
@@ -23,11 +27,26 @@ final class AppController extends AbstractController
      * Simple page with some dynamic content.
      */
     #[Route(path: '/', name: 'home')]
-    public function home(): Response
+    public function home(SerializerInterface $serializer, DemoCommand $demoCommand, LoggerInterface $logger): Response
     {
         $readme = file_get_contents(__DIR__.'/../../README.md');
 
-        return $this->render('home.html.twig', compact('readme'));
+        $product = $demoCommand->getProductEntity();
+        $xml = $demoCommand->getProductXml($product);
+        dump($product, $xml);
+
+        // now read it back into a product
+        /** @var Product $product2 */
+        $product2 = $serializer->deserialize($xml, Product::class, 'xml', ['xml_root_node_name' => 'product'] );
+        if ($product2->getDescription() == $product->getDescription()) {
+            $logger->info("deserialize success!");
+        } else {
+            $logger->error($xml . " deserialize did not work :-(");
+        }
+
+
+        return $this->render('home.html.twig',
+            compact('xml', 'product', 'product2', 'readme'));
     }
 
     /**
